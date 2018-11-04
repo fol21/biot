@@ -1,0 +1,25 @@
+{
+  "name": "biot",
+  "version": "0.1.0",
+  "description": "",
+  "main": "index.js",
+  "types": "index.d.js",
+  "scripts": {
+    "build": "tsc",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/fol21/biot.git"
+  },
+  "author": "fernando lima",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/fol21/biot/issues"
+  },
+  "homepage": "https://github.com/fol21/biot#readme",
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^10.12.2"
+  }
+}
