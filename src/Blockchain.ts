@@ -37,9 +37,9 @@ export class DataBlockchain implements IBlockchain < string > {
             this.genesis.nonce +
             this.genesis.previous
         );
-
-        this.genesis.data.value = value || null;
-        this.genesis.data.timestamp = collectionTime || 0;
+        
+        this.genesis.data = {value: value ||"", timestamp: collectionTime  || 0};
+        this.chain = new Array<DataBlock<string>>();
         this.chain.push(this.genesis);
         
         this.difficulty = difficulty || 0;
@@ -50,8 +50,8 @@ export class DataBlockchain implements IBlockchain < string > {
         block.blockIndex = this.chain.length.toString();
         block.previous = this.lastBlock().hash;
 
-        block.data.value = data.value;
-        block.data.timestamp = data.collectionTime;
+        block.data = {value: data.value ||"", timestamp: data.collectionTime  || 0};
+
         return block;
     }
 
@@ -103,7 +103,22 @@ export class DataBlockchain implements IBlockchain < string > {
         block.hash = hash;
         return block;
     }
-    validateChain(chain: DataBlock < string > []): boolean{
-        return false;
+    validateChain(chain: DataBlock < string > []): boolean
+    {
+        let previousBlock = this.genesis;
+        let currentBlock = null;
+        for (let index = 1; index < this.chain.length; index++) {
+            currentBlock = this.chain[index];
+            // Check if every block link match
+            if(previousBlock.hash != currentBlock.previous)
+                return false;
+            // Check if every block hash match
+            let checkerHash = this.hash(currentBlock.blockIndex + currentBlock.previous + 
+                currentBlock.nonce + currentBlock.timestamp + JSON.stringify(currentBlock.data));
+            if(currentBlock.hash != checkerHash)
+                return false;
+            previousBlock = currentBlock;
+        }
+        return true;
     }
 }
