@@ -24,7 +24,7 @@ export class DataBlockchain implements IBlockchain < string > {
     chain: DataBlock < string > [];
     difficulty : number = 0;
 
-    constructor(value?: any | any[], collectionTime?: number, difficulty? : number) {
+    constructor(difficulty? : number, value?: any | any[], collectionTime?: number) {
         this.genesis = new DataBlock < string > ({
             blockIndex: "1",
             nonce: 1,
@@ -70,6 +70,9 @@ export class DataBlockchain implements IBlockchain < string > {
         return hash.update(blockData).digest('hex');
     }
 
+    _calculateBlockHash(index : string, previous : string, data: any, timestamp : number, nonce: number ){
+        return this.hash(index + previous + JSON.stringify(data) + timestamp + nonce)
+    }
 
     proofOfWork(block: DataBlock < string > , difficulty: number): DataBlock<string> {
         let check = false;
@@ -79,13 +82,7 @@ export class DataBlockchain implements IBlockchain < string > {
         while (!check) {
             time = Date.now();
             nonce++;
-            hash = this.hash(
-                block.blockIndex +
-                block.previous +
-                JSON.stringify(block.data) +
-                time +
-                nonce
-            );
+            hash = this._calculateBlockHash(block.blockIndex, block.previous, block.data, time, nonce);
             try {
                 for (var i = 0, b = hash.length; i < b; i++) {
                     if (hash[i] !== '0') {
@@ -113,8 +110,8 @@ export class DataBlockchain implements IBlockchain < string > {
             if(previousBlock.hash != currentBlock.previous)
                 return false;
             // Check if every block hash match
-            let checkerHash = this.hash(currentBlock.blockIndex + currentBlock.previous + 
-                currentBlock.nonce + currentBlock.timestamp + JSON.stringify(currentBlock.data));
+            let checkerHash = this._calculateBlockHash(currentBlock.blockIndex, currentBlock.previous, currentBlock.data,
+                currentBlock.timestamp, currentBlock.nonce)
             if(currentBlock.hash != checkerHash)
                 return false;
             previousBlock = currentBlock;
