@@ -30,7 +30,8 @@ export class DataBlockchain implements IBlockchain < string > {
             nonce: 1,
             timestamp: Date.now(),
             previous: "0",
-            hash: "0"
+            hash: "0",
+            data: {value: value ||"", timestamp: collectionTime  || 0}
         });
         this.genesis.hash = this.hash(
             this.genesis.blockIndex +
@@ -38,7 +39,6 @@ export class DataBlockchain implements IBlockchain < string > {
             this.genesis.previous
         );
         
-        this.genesis.data = {value: value ||"", timestamp: collectionTime  || 0};
         this.chain = new Array<DataBlock<string>>();
         this.chain.push(this.genesis);
         

@@ -4,6 +4,7 @@ export interface IBlock{
     timestamp: number;
     previous: string;
     hash: string;
+    data: any;
 }
 
 export class DataBlock<T> implements IBlock
