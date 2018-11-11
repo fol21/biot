@@ -20,7 +20,8 @@
   },
   "homepage": "https://github.com/fol21/biot#readme",
   "dependencies": {
-    "@types/node": "^10.12.2"
+    "@types/node": "^10.12.2",
+    "mqtt": "^2.18.8"
   },
   "devDependencies": {
     "@types/chai": "^4.1.7",
