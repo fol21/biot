@@ -11,7 +11,7 @@ export interface IBlockchain < T > {
     chain: IBlock[];
 
     createBlock(data : any): IBlock;
-    addBlock(block: IBlock): IBlock[];
+    addBlock(block: IBlock, enableProof?: Boolean): IBlock[];
     lastBlock(): IBlock;
     hash(blockData: string): T;
     proofOfWork(block: IBlock, difficulty: number): IBlock;
@@ -55,8 +55,9 @@ export class DataBlockchain implements IBlockchain < string > {
         return block;
     }
 
-    addBlock(block: DataBlock < string > ) {
-        block = this.proofOfWork(block,this.difficulty);
+    addBlock(block: DataBlock < string >, enableProof : boolean) {
+        if(enableProof)
+            block = this.proofOfWork(block,this.difficulty);
         this.chain.push(block);
         return this.chain;
     }

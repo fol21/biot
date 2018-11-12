@@ -32,7 +32,8 @@ export class MQTTNetworker implements INetworker{
 
     node : MQTTNode;
     networkNodes : MQTTNode[];
-    client : MqttClient; 
+    client : MqttClient;
+    blockchain: IBlockchain<string>; 
 
     constructor(nodeId : string, brokerUrl : string){
         
@@ -53,11 +54,37 @@ export class MQTTNetworker implements INetworker{
         return null;
     }
 
+    _evaluate(incomingBlock : IBlock){
+        if(incomingBlock.previous == this.blockchain.lastBlock().hash)
+            return true;
+        return false;  
+    }
+    
     connect(brokerUrl: string){
         this.client = mqtt.connect(brokerUrl);
         this.client.on('connect',() =>{
-            this.client.subscribe('consensus');
-            this.client.publish('new_node',this.node.id);
+            this.client.subscribe(this.node.topic);
+            this.client.subscribe('/add');
+            this.client.subscribe('/consensus');
+            this.client.publish('/new-node',this.node.id);
+        });
+        this.client.on('message', (topic, message) =>{
+            let incomingBlock : IBlock = JSON.parse(message.toString());
+            if(topic == '/add'){
+                if(this._evaluate(incomingBlock))
+                    this.blockchain.addBlock(incomingBlock,false);
+            }
+            if(topic == '/consensus'){
+                //Answer consensus request:
+                    // 1. Parse requester Id
+                    // 2. Send your Blockchain
+                
+            }
+            if(topic = this.node.topic){
+                //Compare incoming blockchain with your's blockchain
+                    // if incoming is longest then replace
+                    // else then remain with your's blockchain
+            }
         });
     };
 }
