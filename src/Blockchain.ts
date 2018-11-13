@@ -55,7 +55,7 @@ export class DataBlockchain implements IBlockchain < string > {
         return block;
     }
 
-    addBlock(block: DataBlock < string >, enableProof : boolean) {
+    addBlock(block: DataBlock < string >, enableProof? : boolean) {
         if(enableProof)
             block = this.proofOfWork(block,this.difficulty);
         this.chain.push(block);

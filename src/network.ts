@@ -3,6 +3,12 @@ import { IBlockchain } from "./Blockchain";
 import * as mqtt from 'mqtt';
 import { MqttClient } from "mqtt";
 
+export enum MQTTNetworkTopicsEnum{
+    ADD = '/add',
+    CONSENSUS = '/consensus',
+    NEW_NODE = '/new-node'
+}
+
 export interface INetworkNode{
     id : any;
 }
@@ -46,7 +52,7 @@ export class MQTTNetworker implements INetworker{
     }
     
     consensus(nodes : MQTTNode[]){
-
+        this.client.publish(MQTTNetworkTopicsEnum.CONSENSUS,JSON.stringify({id : this.node.id}));
     }
     
     getNodes() : MQTTNode[]
@@ -60,29 +66,39 @@ export class MQTTNetworker implements INetworker{
         return false;  
     }
     
+    
     connect(brokerUrl: string){
         this.client = mqtt.connect(brokerUrl);
+
         this.client.on('connect',() =>{
             this.client.subscribe(this.node.topic);
-            this.client.subscribe('/add');
-            this.client.subscribe('/consensus');
-            this.client.publish('/new-node',this.node.id);
+            this.client.subscribe(MQTTNetworkTopicsEnum.ADD);
+            this.client.subscribe(MQTTNetworkTopicsEnum.CONSENSUS);
+            this.client.subscribe(MQTTNetworkTopicsEnum.NEW_NODE);
+            this.client.publish(MQTTNetworkTopicsEnum.NEW_NODE,this.node.id);
         });
+
         this.client.on('message', (topic, message) =>{
-            let incomingBlock : IBlock = JSON.parse(message.toString());
-            if(topic == '/add'){
-                if(this._evaluate(incomingBlock))
-                    this.blockchain.addBlock(incomingBlock,false);
+            let incomingBlock : {block : IBlock} = JSON.parse(message.toString());
+            if(topic == MQTTNetworkTopicsEnum.ADD){
+                if(this._evaluate(incomingBlock.block))
+                    this.blockchain.addBlock(incomingBlock.block,false);
             }
-            if(topic == '/consensus'){
+            if(topic == MQTTNetworkTopicsEnum.CONSENSUS){
                 //Answer consensus request:
                     // 1. Parse requester Id
+                let concent : {id : string} = JSON.parse(message.toString());
+                if(concent.id != this.node.id)
                     // 2. Send your Blockchain
-                
+                    this.client.publish(`/${concent.id}`,JSON.stringify({blockchain : this.blockchain}));
             }
-            if(topic = this.node.topic){
+            if(topic == this.node.topic){
                 //Compare incoming blockchain with your's blockchain
+                let response : {blockchain : IBlockchain<string>} = JSON.parse(message.toString());
                     // if incoming is longest then replace
+                    if(response.blockchain.chain.length > this.blockchain.chain.length 
+                        && this.blockchain.validateChain(response.blockchain.chain))
+                        this.blockchain = response.blockchain;
                     // else then remain with your's blockchain
             }
         });

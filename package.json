@@ -7,7 +7,7 @@
   "scripts": {
     "build": "tsc",
     "test": "node test/test.js",
-    "spec": "ts-mocha -p tsconfig.json src/**/*.spec.ts"
+    "mocha": "ts-mocha -p tsconfig.json src/**/*.spec.ts"
   },
   "repository": {
     "type": "git",
