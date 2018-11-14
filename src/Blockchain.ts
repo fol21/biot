@@ -55,8 +55,8 @@ export class DataBlockchain implements IBlockchain < string > {
         return block;
     }
 
-    addBlock(block: DataBlock < string >, enableProof? : boolean) {
-        if(enableProof)
+    addBlock(block: DataBlock < string >, bypassProof? : boolean) {
+        if(!bypassProof)
             block = this.proofOfWork(block,this.difficulty);
         this.chain.push(block);
         return this.chain;
@@ -72,7 +72,7 @@ export class DataBlockchain implements IBlockchain < string > {
     }
 
     _calculateBlockHash(index : string, previous : string, data: any, timestamp : number, nonce: number ){
-        return this.hash(index + previous + JSON.stringify(data) + timestamp + nonce)
+        return this.hash(index + timestamp + nonce + JSON.stringify(data)  + previous)
     }
 
     proofOfWork(block: DataBlock < string > , difficulty: number): DataBlock<string> {

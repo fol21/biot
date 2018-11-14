@@ -30,8 +30,7 @@ export interface INetworker {
 
     mine(data : any, blockchain: IBlockchain<string>) : any;
     consensus(nodes : INetworkNode[]) : any;
-    getNodes() : INetworkNode[];
-    connect(url : string | undefined) : any;
+    connect(url? : any, callback? : Function ) : any;
 }
 
 export class MQTTNetworker implements INetworker{
@@ -41,25 +40,22 @@ export class MQTTNetworker implements INetworker{
     client : MqttClient;
     blockchain: IBlockchain<string>; 
 
-    constructor(nodeId : string, brokerUrl : string){
+    constructor(nodeId : string, blockchain: IBlockchain<string>){
         
         this.node = new MQTTNode(nodeId,`/${nodeId}`);
-        this.connect(brokerUrl);
+        this.blockchain = blockchain;
     }
     
-    mine(data : any, blockchain : IBlockchain<string>){
-        return blockchain.addBlock(blockchain.createBlock(data));
+    async mine(data : any, blockchain : IBlockchain<string>){
+        
+        let block = blockchain.addBlock(blockchain.createBlock(data));
+        this.client.publish(MQTTNetworkTopicsEnum.ADD, JSON.stringify({block}));
     }
     
     consensus(nodes : MQTTNode[]){
         this.client.publish(MQTTNetworkTopicsEnum.CONSENSUS,JSON.stringify({id : this.node.id}));
     }
     
-    getNodes() : MQTTNode[]
-    {
-        return null;
-    }
-
     _evaluate(incomingBlock : IBlock){
         if(incomingBlock.previous == this.blockchain.lastBlock().hash)
             return true;
@@ -67,22 +63,25 @@ export class MQTTNetworker implements INetworker{
     }
     
     
-    connect(brokerUrl: string){
+    connect(brokerUrl?: any, callback?: Function){
         this.client = mqtt.connect(brokerUrl);
-
+        
         this.client.on('connect',() =>{
             this.client.subscribe(this.node.topic);
             this.client.subscribe(MQTTNetworkTopicsEnum.ADD);
             this.client.subscribe(MQTTNetworkTopicsEnum.CONSENSUS);
             this.client.subscribe(MQTTNetworkTopicsEnum.NEW_NODE);
             this.client.publish(MQTTNetworkTopicsEnum.NEW_NODE,this.node.id);
+
+            if(callback)
+                callback();
         });
 
         this.client.on('message', (topic, message) =>{
-            let incomingBlock : {block : IBlock} = JSON.parse(message.toString());
             if(topic == MQTTNetworkTopicsEnum.ADD){
+                let incomingBlock : {block : IBlock} = JSON.parse(message.toString());
                 if(this._evaluate(incomingBlock.block))
-                    this.blockchain.addBlock(incomingBlock.block,false);
+                    this.blockchain.addBlock(incomingBlock.block,true);
             }
             if(topic == MQTTNetworkTopicsEnum.CONSENSUS){
                 //Answer consensus request:
